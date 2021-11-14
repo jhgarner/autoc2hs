@@ -24,6 +24,17 @@ dependencies:
 - language-c
 - containers
 - mtl
+- template-haskell
+- freer-simple
+
+default-extensions:
+- GADTs
+- FlexibleContexts
+- TypeOperators
+- DataKinds
+- LambdaCase
+- ViewPatterns
+- TupleSections
 
 library:
   source-dirs: src
