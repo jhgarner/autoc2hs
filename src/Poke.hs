@@ -8,15 +8,11 @@ module Poke where
 import App
 import Language.C.Analysis hiding (Type)
 import Foreign
-import Foreign.C
-import Data.Semigroup
-import Data.Functor.Foldable
-import Data.Set hiding (fold)
-import Language.C (SUERef)
 import Language.Haskell.TH.Syntax
 import TypeLookup
 import Data.List (scanl')
 import Control.Monad
+import Namable
 
 pokeAt :: Name -> Int -> Exp
 pokeAt p x =

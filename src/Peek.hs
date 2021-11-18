@@ -11,6 +11,7 @@ import Language.Haskell.TH.Syntax
 import TypeLookup
 import Data.List (scanl', foldl')
 import Control.Monad
+import Namable
 
 peekAt :: Name -> Int -> Exp
 peekAt p x =

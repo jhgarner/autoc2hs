@@ -6,25 +6,44 @@ module AllTypes where
 
 import App
 import Language.C.Analysis hiding (Type)
-import Foreign
-import Foreign.C
-import Data.Semigroup
-import Data.Functor.Foldable
+import Data.Functor.Foldable hiding (fold)
 import Data.Set hiding (fold)
 import Language.C (SUERef)
+import Control.Monad.State.Strict
+import Control.Monad.Identity
+import Data.Foldable
 
-getTypesOf :: CDataTypeF (Set SUERef) -> Set SUERef
-getTypesOf TheVoidF = mempty
-getTypesOf (LeafIntF i) = mempty
-getTypesOf (LeafFloatF f) = mempty
-getTypesOf FunctionF = mempty
-getTypesOf (OpaqueF _) = mempty
-getTypesOf (PointerF (Left name)) = insert name mempty
-getTypesOf (PointerF (Right names)) = names
-getTypesOf (ArrayF _ n) = n
-getTypesOf (StructF name ls) = insert name $ foldMap snd ls
-getTypesOf (EnumF name _) = insert name mempty
+type Visited a = StateT (Set SUERef) Identity a
 
-getTypes :: CDataType -> Set SUERef
-getTypes = cata getTypesOf
+getTypesOf :: Monoid a => (CDataType -> a) -> CDataTypeF (CDataType, Visited a) -> Visited a
+getTypesOf f = \case
+  TheVoidF -> pure mempty
+  LeafIntF _ -> pure mempty
+  LeafFloatF _ -> pure mempty
+  FunctionF -> pure mempty
+  PointerF t -> snd t
+  ArrayF _ n -> snd n
+  OpaqueF name -> do
+    gets (member name) >>= \case
+      False -> do
+        modify' $ insert name
+        pure $ f $ Opaque name
+      True -> pure mempty
+  c@(StructF name ls) -> do
+    gets (member name) >>= \case
+      False -> do
+        modify' $ insert name
+        as <- traverse (snd . snd) ls
+        let result = fold as <> f (embed $ fmap fst c)
+        pure result
+      True -> pure mempty
+  c@(EnumF name _) -> do
+    gets (member name) >>= \case
+      False -> do
+        modify' $ insert name
+        pure $ f $ embed $ fmap fst c
+      True -> pure mempty
+
+getTypes :: Monoid a => (CDataType -> a) -> CDataType -> a
+getTypes f c = evalState (para (getTypesOf f) c) mempty
 

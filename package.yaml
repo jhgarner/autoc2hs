@@ -28,6 +28,7 @@ dependencies:
 - freer-simple
 - recursion-schemes
 - fixed-vector
+- free
 
 default-extensions:
 - GADTs

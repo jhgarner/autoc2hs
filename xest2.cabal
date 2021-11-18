@@ -29,6 +29,7 @@ library
       AllTypes
       App
       Lib
+      Namable
       Peek
       Poke
       TH
@@ -49,6 +50,7 @@ library
       base >=4.7 && <5
     , containers
     , fixed-vector
+    , free
     , freer-simple
     , language-c
     , mtl
@@ -75,6 +77,7 @@ executable xest2-exe
       base >=4.7 && <5
     , containers
     , fixed-vector
+    , free
     , freer-simple
     , language-c
     , mtl
@@ -103,6 +106,7 @@ test-suite xest2-test
       base >=4.7 && <5
     , containers
     , fixed-vector
+    , free
     , freer-simple
     , language-c
     , mtl
