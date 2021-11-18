@@ -1,8 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveFunctor #-}
@@ -66,17 +64,11 @@ handleMemberDecl (MemberDecl (VarDecl name _ t) _ _) = (name, typeLookup t)
 handleMemberDecl AnonBitField {} = error "I don't know how to handle anonymous buit fields"
 
 mkStruct :: CompType -> CDataTypeF (Free CDataTypeF SUERef)
-mkStruct (CompType name _ ls _ _) =
-  let xs = fmap handleMemberDecl ls
-   in StructF name xs
+mkStruct (CompType name _ ls _ _) = StructF name $ fmap handleMemberDecl ls
 
 directDeps :: TagDef -> CDataTypeF (Free CDataTypeF SUERef)
 directDeps (CompDef struct) = mkStruct struct
 directDeps (EnumDef enum) = mkEnum enum
 
 depsFromName :: Map SUERef TagDef -> SUERef -> CDataType
-depsFromName m = futu $ \name ->
-  let t = lookup name m
-   in case t of
-        Just name -> directDeps name
-        Nothing -> OpaqueF name
+depsFromName m = futu \name -> maybe (OpaqueF name) directDeps $ lookup name m
