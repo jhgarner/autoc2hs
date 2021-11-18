@@ -26,6 +26,8 @@ dependencies:
 - mtl
 - template-haskell
 - freer-simple
+- recursion-schemes
+- fixed-vector
 
 default-extensions:
 - GADTs
