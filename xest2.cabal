@@ -28,6 +28,7 @@ library
       Alignment
       AllTypes
       App
+      Func
       Lib
       Namable
       Peek
@@ -46,6 +47,8 @@ library
       LambdaCase
       ViewPatterns
       TupleSections
+  pkgconfig-depends:
+      wlroots
   build-depends:
       base >=4.7 && <5
     , containers
@@ -73,6 +76,8 @@ executable xest2-exe
       ViewPatterns
       TupleSections
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  pkgconfig-depends:
+      wlroots
   build-depends:
       base >=4.7 && <5
     , containers
@@ -102,6 +107,8 @@ test-suite xest2-test
       ViewPatterns
       TupleSections
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  pkgconfig-depends:
+      wlroots
   build-depends:
       base >=4.7 && <5
     , containers

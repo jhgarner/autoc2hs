@@ -20,7 +20,10 @@ getTypesOf f = \case
   TheVoidF -> pure mempty
   LeafIntF _ -> pure mempty
   LeafFloatF _ -> pure mempty
-  FunctionF -> pure mempty
+  FunctionF ret params -> do
+    a <- snd ret
+    b <- traverse snd params
+    pure $ a <> fold b
   PointerF t -> snd t
   ArrayF _ n -> snd n
   OpaqueF name -> do
@@ -44,6 +47,6 @@ getTypesOf f = \case
         pure $ f $ embed $ fmap fst c
       True -> pure mempty
 
-getTypes :: Monoid a => (CDataType -> a) -> CDataType -> a
-getTypes f c = evalState (para (getTypesOf f) c) mempty
+getTypes :: Monoid a => (CDataType -> a) -> [CDataType] -> a
+getTypes f cs = fold $ evalState (traverse (para (getTypesOf f)) cs) mempty
 

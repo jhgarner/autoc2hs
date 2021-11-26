@@ -14,34 +14,38 @@ import Language.C.System.GCC (newGCC)
 import Language.Haskell.TH.Syntax hiding (lift)
 import AllTypes
 import Data.Monoid
+import Data.Map.Strict (keys, (!))
+import Func
+import qualified Data.Map.Strict as M
+import Debug.Trace
 
 someFunc :: IO ()
 someFunc = print "Done"
 
-ast = parseCFile (newGCC "gcc") Nothing opts "tmp.h"
+-- ast = parseCFile (newGCC "gcc") Nothing opts "tmp.h"
 -- ast = parseCFile (newGCC "gcc") Nothing opts "./wlroots/include/wlr/backend/session.h"
 
-opts =
-  [ "-Iwlroots/include/",
-    "-IwaylandScanner/",
-    "-DWLR_USE_UNSTABLE",
-    "-I/nix/store/zz6wnl0all718kz9x11fp5331i10mkmw-wayland-1.19.0-dev/include",
-    "-I/nix/store/j8s8h5h2xyjdcsxv3h8yzwngabfw6sbd-pixman-0.38.4/include/pixman-1",
-    "-I/nix/store/fk708siz7r42av7rfy3n0hwv4xqrdm8m-libxkbcommon-1.3.1-dev/include",
-    "-I/nix/store/x33wa1b417shqy9l2yq2jw2g17z4xk9d-systemd-249.4-dev/include"
-  ]
 
-fromFileFilter :: Pos n => n -> Bool
-fromFileFilter n =
+fromFileFilter :: (Pos n, Show n) => String -> n -> Bool
+fromFileFilter name n =
   let info = posFile $ posOf n
-   in info == "./wlroots/include/wlr/backend/session.h"
+      isReal = isSourcePos $ posOf n
+   in isReal && info == name
 
-generate :: Q [Dec]
-generate = do
-  Right a <- liftIO ast
+extractIdent :: SUERef -> Maybe Ident
+extractIdent (NamedRef i) = Just i
+extractIdent _ = Nothing
+
+generate :: [String] -> String -> Q [Dec]
+generate opts header = do
+  Right a <- liftIO $ parseCFile (newGCC "gcc") Nothing opts header
   let Right (globals, warnings) = runTrav_ $ analyseAST a
       types = gTags globals
-  let c = depsFromName types $ NamedRef $ internalIdent "wlr_session"
+      funcs = gObjs globals
+      roots = filter (maybe False (fromFileFilter header) . extractIdent) $ keys types
+      imports = fmap (createGlobal types) $ M.elems $ M.filterWithKey (const . fromFileFilter header) funcs
+  liftIO $ print $ funcs ! internalIdent "wlr_session_change_vt"
+  let c = depsFromName types <$> roots
       t = getTypes generateType c
   instances <- getAp $ getTypes (Ap . generateSerializable) c
-  pure $ t ++ instances
+  pure $ t ++ instances ++ imports

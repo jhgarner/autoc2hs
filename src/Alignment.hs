@@ -42,7 +42,7 @@ getalignOf :: CDataTypeF Int -> Int
 getalignOf TheVoidF = align @()
 getalignOf (LeafIntF i) = alignOfCInt i
 getalignOf (LeafFloatF f) = alignOfCFloat f
-getalignOf FunctionF = align @()
+getalignOf (FunctionF _ _) = align @(Ptr ())
 getalignOf (OpaqueF _) = align @()
 getalignOf (PointerF _) = align @(Ptr ())
 getalignOf (ArrayF s a) = a

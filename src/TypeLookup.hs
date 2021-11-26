@@ -42,7 +42,7 @@ getSizeOf :: CDataTypeF Int -> Int
 getSizeOf TheVoidF = size @()
 getSizeOf (LeafIntF i) = sizeOfCInt i
 getSizeOf (LeafFloatF f) = sizeOfCFloat f
-getSizeOf FunctionF = size @()
+getSizeOf (FunctionF _ _) = size @(Ptr ())
 getSizeOf (OpaqueF _) = size @()
 getSizeOf (PointerF _) = size @(Ptr ())
 getSizeOf (ArrayF n size) = n * size

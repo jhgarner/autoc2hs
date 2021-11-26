@@ -22,7 +22,7 @@ data CDataType
   = LeafInt IntType
   | LeafFloat FloatType
   | TheVoid
-  | Function
+  | Function CDataType [CDataType]
   | Opaque SUERef
   | Pointer CDataType
   | Array Int CDataType
@@ -46,11 +46,18 @@ getArraySize (UnknownArraySize _) = error "What does this even mean?"
 getArraySize (ArraySize _ (CConst (CIntConst (CInteger i _ _) _))) = fromIntegral i
 getArraySize _ = error "I really don't want to evaluate c expressions"
 
+mkFunctionType :: FunType -> Free CDataTypeF SUERef
+mkFunctionType (FunType ret params _) = Free $ FunctionF (typeLookup ret) $ fmap typeOfDecl params
+mkFunctionType (FunTypeIncomplete _) = error "Don't know how to handle this"
+
+typeOfDecl :: ParamDecl -> Free CDataTypeF SUERef
+typeOfDecl (getVarDecl -> VarDecl _ _ t) = typeLookup t
+
 typeLookup :: C.Type -> Free CDataTypeF SUERef
 typeLookup (PtrType t _ _) = Free $ PointerF $ typeLookup t
 typeLookup (DirectType name _ _) = typeNameLookup name
 typeLookup (ArrayType name size _ _) = Free $ ArrayF (getArraySize size) $ typeLookup name
-typeLookup (FunctionType _ _) = Free FunctionF -- error "Function type detected"
+typeLookup (FunctionType f _) = mkFunctionType f
 typeLookup (TypeDefType (TypeDefRef _ t _) _ _) = typeLookup t
 
 -- TODO Don't assume that each enum item is assigned in order starting with 0

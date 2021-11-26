@@ -63,3 +63,6 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - xest2
+
+pkg-config-dependencies:
+  - wlroots

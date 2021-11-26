@@ -49,7 +49,7 @@ getType = \case
   LeafInt i -> cInt2Haskell i
   LeafFloat f -> cFloat2Haskell f
   TheVoid -> ConT ''()
-  Function -> ConT ''()
+  Function ret params -> foldr (\l r -> ArrowT `AppT` l `AppT` r) (AppT (ConT ''IO) $ getType ret) (fmap getType params)
   Array n t -> ConT ''Vec `AppT` LitT (NumTyLit $ fromIntegral n) `AppT` getType t
   Opaque name -> ConT $ toName name
   Pointer inner -> AppT (ConT ''Ptr) $ getType inner
